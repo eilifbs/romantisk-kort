@@ -457,6 +457,38 @@
       opacity: 0;
     }
 
+    .burst {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9;
+      overflow: visible;
+    }
+
+    .burst-heart {
+      position: absolute;
+      left: 50%;
+      top: 62%;
+      opacity: 0;
+      font-size: 24px;
+      line-height: 1;
+      transform: translate(-50%, -50%) scale(0.4);
+    }
+
+    .burst-heart:nth-child(1) { --x: -112px; --y: -128px; --rot: -18deg; color: rgba(214, 103, 143, 0.88); }
+    .burst-heart:nth-child(2) { --x: -76px; --y: -146px; --rot: -6deg; color: rgba(244, 180, 200, 0.92); font-size: 18px; }
+    .burst-heart:nth-child(3) { --x: -36px; --y: -118px; --rot: -10deg; color: rgba(201, 90, 130, 0.86); }
+    .burst-heart:nth-child(4) { --x: 0px; --y: -154px; --rot: 0deg; color: rgba(239, 146, 177, 0.9); font-size: 28px; }
+    .burst-heart:nth-child(5) { --x: 38px; --y: -122px; --rot: 10deg; color: rgba(214, 103, 143, 0.88); }
+    .burst-heart:nth-child(6) { --x: 78px; --y: -146px; --rot: 6deg; color: rgba(245, 186, 204, 0.94); font-size: 18px; }
+    .burst-heart:nth-child(7) { --x: 112px; --y: -128px; --rot: 18deg; color: rgba(201, 90, 130, 0.84); }
+    .burst-heart:nth-child(8) { --x: -54px; --y: -88px; --rot: -12deg; color: rgba(233, 145, 173, 0.88); font-size: 16px; }
+    .burst-heart:nth-child(9) { --x: 56px; --y: -92px; --rot: 12deg; color: rgba(244, 180, 200, 0.9); font-size: 16px; }
+
+    .page[data-burst="true"] .burst-heart {
+      animation: heartBurst 900ms cubic-bezier(0.18, 0.8, 0.32, 1) forwards;
+    }
+
     html:not(.js) .scene {
       height: auto;
       min-height: 0;
@@ -506,6 +538,20 @@
       }
     }
 
+    @keyframes heartBurst {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.3);
+      }
+      12% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(var(--rot)) scale(1.05);
+      }
+    }
+
     @media (max-width: 640px) {
       body {
         background:
@@ -518,7 +564,7 @@
 
       .page {
         place-items: start center;
-        padding: 28px 14px 42px;
+        padding: 24px 14px 42px;
       }
 
       body::before,
@@ -539,13 +585,19 @@
       }
 
       .scene {
-        height: min(112vw, 430px);
-        min-height: 390px;
+        height: min(126vw, 500px);
+        min-height: 450px;
       }
 
       .scene::before {
-        inset: 50px -8px 32px;
+        inset: 130px -8px 32px;
         filter: blur(24px);
+      }
+
+      .envelope {
+        height: min(70vw, 290px);
+        max-height: 290px;
+        inset: auto 0 20px;
       }
 
       .letter {
@@ -576,15 +628,19 @@
       }
 
       .page[data-open="true"] .letter {
-        transform: translate(-50%, -84px) scale(1);
+        transform: translate(-50%, -108px) scale(1);
       }
 
       .page[data-open="true"] .envelope {
-        transform: translateY(18px) scale(0.99);
+        transform: translateY(8px) scale(0.99);
       }
 
       .button {
-        margin-top: 10px;
+        margin-top: 18px;
+      }
+
+      .burst-heart {
+        top: 60%;
       }
     }
 
@@ -651,6 +707,18 @@
             <div class="flap"></div>
             <div class="wax">♥</div>
           </div>
+
+          <div class="burst" aria-hidden="true">
+            <span class="burst-heart">♥</span>
+            <span class="burst-heart">♥</span>
+            <span class="burst-heart">♥</span>
+            <span class="burst-heart">♥</span>
+            <span class="burst-heart">♥</span>
+            <span class="burst-heart">♥</span>
+            <span class="burst-heart">♥</span>
+            <span class="burst-heart">♥</span>
+            <span class="burst-heart">♥</span>
+          </div>
         </div>
 
         <button class="button" id="toggle" type="button" aria-controls="letter" aria-expanded="false">
@@ -664,14 +732,33 @@
     const page = document.querySelector(".page");
     const scene = document.getElementById("scene");
     const toggle = document.getElementById("toggle");
+    let burstTimer;
 
     page.classList.add("js-ready");
+    page.dataset.burst = "false";
+
+    function triggerBurst() {
+      page.dataset.burst = "false";
+      window.clearTimeout(burstTimer);
+      requestAnimationFrame(function () {
+        page.dataset.burst = "true";
+        burstTimer = window.setTimeout(function () {
+          page.dataset.burst = "false";
+        }, 920);
+      });
+    }
 
     function setOpenState(open) {
       page.dataset.open = String(open);
       scene.setAttribute("aria-expanded", String(open));
       toggle.setAttribute("aria-expanded", String(open));
       toggle.textContent = open ? "Lukk kortet" : "Åpne kortet";
+
+      if (open) {
+        triggerBurst();
+      } else {
+        page.dataset.burst = "false";
+      }
     }
 
     function toggleCard() {
